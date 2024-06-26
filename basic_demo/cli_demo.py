@@ -4,13 +4,19 @@ Strongly suggest to use GPU with bfloat16 support, otherwise, it will be slow.
 Mention that only one picture can be processed at one conversation, which means you can not replace or insert another picture during the conversation.
 
 """
-
+import os
 import torch
 
 from PIL import Image
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from dotenv import load_dotenv
 
-MODEL_PATH = "/share/home/zyx/Models/cogvlm2-llama3-chat-19B"
+load_dotenv()
+
+MODEL_PATH = os.getenv('MODEL_PATH')
+
+# MODEL_PATH = "/share/home/zyx/Models/cogvlm2-llama3-chat-19B"
+
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 TORCH_TYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.get_device_capability()[
     0] >= 8 else torch.float16
@@ -23,9 +29,10 @@ model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH,
     torch_dtype=TORCH_TYPE,
     trust_remote_code=True,
-    # load_in_4bit=True,
-    # low_cpu_mem_usage=True
-).to(DEVICE).eval()
+    device_map='cuda',
+    load_in_4bit=True,
+    low_cpu_mem_usage=True
+).eval()
 
 
 
